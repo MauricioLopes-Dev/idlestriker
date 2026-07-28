@@ -354,6 +354,54 @@ class GameController extends Controller
             ]
         ];
 
+        $skinsPools = [
+            'Mil-Spec' => [
+                ['weapon' => 'Glock-18', 'skin' => 'Candy Apple', 'buff' => 0.15],
+                ['weapon' => 'USP-S', 'skin' => 'Torque', 'buff' => 0.18],
+                ['weapon' => 'MAC-10', 'skin' => 'Silver', 'buff' => 0.20],
+                ['weapon' => 'P250', 'skin' => 'Valence', 'buff' => 0.15],
+                ['weapon' => 'MP9', 'skin' => 'Bioleak', 'buff' => 0.22],
+                ['weapon' => 'MP7', 'skin' => 'Special Delivery', 'buff' => 0.19],
+                ['weapon' => 'Nova', 'skin' => 'Rising Skull', 'buff' => 0.21],
+            ],
+            'Restricted' => [
+                ['weapon' => 'AK-47', 'skin' => 'Elite Build', 'buff' => 0.35],
+                ['weapon' => 'M4A1-S', 'skin' => 'Basilisk', 'buff' => 0.40],
+                ['weapon' => 'Desert Eagle', 'skin' => 'Conspiracy', 'buff' => 0.45],
+                ['weapon' => 'AWP', 'skin' => 'Fever Dream', 'buff' => 0.50],
+                ['weapon' => 'Galil AR', 'skin' => 'Eco', 'buff' => 0.38],
+                ['weapon' => 'M4A4', 'skin' => 'Temukau', 'buff' => 0.42],
+                ['weapon' => 'FAMAS', 'skin' => 'Meow 36', 'buff' => 0.37],
+            ],
+            'Classified' => [
+                ['weapon' => 'AK-47', 'skin' => 'Redline', 'buff' => 0.75],
+                ['weapon' => 'M4A4', 'skin' => 'Desolate Space', 'buff' => 0.80],
+                ['weapon' => 'AWP', 'skin' => 'Redline', 'buff' => 0.85],
+                ['weapon' => 'USP-S', 'skin' => 'Cortex', 'buff' => 0.70],
+                ['weapon' => 'Desert Eagle', 'skin' => 'Kumicho Dragon', 'buff' => 0.90],
+                ['weapon' => 'AUG', 'skin' => 'Abyss', 'buff' => 0.78],
+                ['weapon' => 'MP5-SD', 'skin' => 'Neon Rider', 'buff' => 0.76],
+            ],
+            'Covert' => [
+                ['weapon' => 'AK-47', 'skin' => 'Asiimov', 'buff' => 1.50],
+                ['weapon' => 'M4A4', 'skin' => 'Neo-Noir', 'buff' => 1.60],
+                ['weapon' => 'AWP', 'skin' => 'Asiimov', 'buff' => 2.00],
+                ['weapon' => 'Desert Eagle', 'skin' => 'Printstream', 'buff' => 1.80],
+                ['weapon' => 'AK-47', 'skin' => 'Vulcan', 'buff' => 1.75],
+                ['weapon' => 'M4A4', 'skin' => 'Howl', 'buff' => 1.90],
+                ['weapon' => 'AWP', 'skin' => 'Medusa', 'buff' => 1.85],
+            ],
+            'Rare Special' => [
+                ['weapon' => 'AWP', 'skin' => 'Dragon Lore 🐉', 'buff' => 4.50],
+                ['weapon' => 'Faca Borboleta', 'skin' => 'Fade ✨', 'buff' => 4.00],
+                ['weapon' => 'AK-47', 'skin' => 'Case Hardened (Blue Gem)', 'buff' => 3.80],
+                ['weapon' => 'M4A4', 'skin' => 'Howl 🔥', 'buff' => 4.20],
+                ['weapon' => 'Luvas Esportivas', 'skin' => 'Vice 🧤', 'buff' => 3.50],
+                ['weapon' => 'AWP', 'skin' => 'Medusa', 'buff' => 4.10],
+                ['weapon' => 'AK-47', 'skin' => 'Wild Lotus', 'buff' => 3.90],
+            ]
+        ];
+
         $config = $caseConfigs[$validated['case_type']];
 
         if ($team->money < $config['cost']) {
@@ -411,7 +459,7 @@ class GameController extends Controller
             ]
         ];
 
-        $pool = $skinsPool[$selectedRarity];
+        $pool = $skinsPools[$selectedRarity];
         $selectedSkin = $pool[array_rand($pool)];
 
         $floatValue = mt_rand(1, 9999) / 10000;
@@ -426,8 +474,8 @@ class GameController extends Controller
         $isStattrak = (mt_rand(1, 100) <= 10);
 
         $droppedSkin = null;
-        DB::transaction(function () use ($team, $selectedRarity, $selectedSkin, $floatValue, $finalBuff, $isStattrak, &$droppedSkin, $user) {
-            $team->money -= 500.00;
+        DB::transaction(function () use ($team, $selectedRarity, $selectedSkin, $floatValue, $finalBuff, $isStattrak, &$droppedSkin, $user, $config) {
+            $team->money -= $config['cost'];
             $team->save();
 
             $droppedSkin = UserSkin::create([
@@ -442,10 +490,27 @@ class GameController extends Controller
             ]);
         });
 
+        $poolSummary = [];
+        foreach ($config['weights'] as $rarity => $weight) {
+            $poolSummary[$rarity] = [
+                'weight' => $weight,
+                'options' => array_map(function ($item) {
+                    return [
+                        'weapon_name' => $item['weapon'],
+                        'skin_name' => $item['skin'],
+                        'buff_multiplier' => $item['buff'],
+                    ];
+                }, $skinsPools[$rarity] ?? [])
+            ];
+        }
+
         return response()->json([
             'success' => true,
             'new_money' => $team->money,
-            'dropped_skin' => $droppedSkin
+            'dropped_skin' => $droppedSkin,
+            'pool_summary' => [
+                $validated['case_type'] => $poolSummary,
+            ],
         ]);
     }
 }

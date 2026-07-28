@@ -13,12 +13,8 @@
   <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
   <header class="sticky top-0 z-50 border-b border-white/10 bg-slate-900/70 backdrop-blur">
     <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3">
-      <div class="flex items-start justify-between gap-3">
-        <!-- Logo -->
+      <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500 to-amber-700 font-black text-lg text-black shadow-lg shadow-amber-500/20">
-            IS
-          </div>
           <div>
             <p class="text-[10px] uppercase tracking-[0.35em] text-slate-500">Tactical Ops</p>
             <p class="text-sm font-semibold text-white">Idle-Strike Ultimate Team</p>
@@ -64,9 +60,15 @@
   <!-- CORPO PRINCIPAL -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
     
-    <!-- COLUNA CENTRAL: LOBBY, ELENCO & CAIXAS (3 Colunas) -->
+    <!-- COLUNA CENTRAL: LOBBY, ELENCO & GACHA (3 Colunas) -->
     <div class="lg:col-span-3 flex flex-col gap-6">
       
+      <!-- CONTROLES DE ABA -->
+      <div class="flex flex-wrap items-center gap-3 rounded-3xl border border-slate-800 bg-slate-950/80 p-4 shadow-inner">
+        <button id="tab-lobby" onclick="window.game.openLobbyTab()" class="px-4 py-2 rounded-2xl bg-slate-800 text-slate-100 font-semibold transition hover:bg-slate-700">Lobby</button>
+        <button id="tab-gacha" onclick="window.game.openGachaTab()" class="px-4 py-2 rounded-2xl bg-slate-900/70 text-slate-300 font-semibold transition hover:bg-slate-800">Gacha</button>
+      </div>
+
       <!-- TELA 1: LOBBY PRINCIPAL -->
       <div id="lobby-screen" class="flex flex-col gap-6">
         
@@ -79,14 +81,29 @@
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
               Servidor Autoritativo Conectado • MR12 Async
             </div>
-            <h2 class="text-3xl font-black text-white tracking-tight">Buscar Confronto Oficial</h2>
+            <h2 class="text-3xl font-black text-white tracking-tight">Buscar adversário registrado</h2>
             <p class="text-sm text-slate-400 mt-1 max-w-lg">
-              Sua escalação disputará rodadas utilizando a economia de partida (Pistol, Eco e Full Buy) com base nos status reais do MySQL.
+              Encontre outro clube registrado dentro do site. A partida será simulada contra o time do adversário, enquanto mantém a mesma economia de round (Pistol, Eco e Full Buy).
             </p>
           </div>
 
+          <div id="matchmaking-status" class="z-10 text-sm text-slate-300 mt-4">
+            Pronto para encontrar outra equipe registrada no servidores.
+          </div>
+
+          <div id="opponent-preview" class="mt-4 hidden rounded-3xl border border-slate-800 bg-slate-950/75 p-4 text-slate-200">
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500">Adversário</p>
+                <p id="opponent-preview-name" class="text-lg font-black text-white">Nenhum adversário criado</p>
+              </div>
+              <span id="opponent-preview-tier" class="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-semibold text-amber-300">Registrado</span>
+            </div>
+            <div id="opponent-preview-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
+          </div>
+
           <button onclick="window.game.startMatchmaking()" class="z-10 w-full md:w-auto px-8 py-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-lg tracking-wider uppercase rounded-xl shadow-xl shadow-amber-500/10 transition transform active:scale-95 flex items-center justify-center gap-3 cursor-pointer border border-amber-400">
-            <span>🔍 PROCURAR PARTIDA</span>
+            <span>🔍 BUSCAR ADVERSÁRIO</span>
           </button>
         </div>
 
@@ -95,7 +112,7 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-xs font-bold tracking-wider text-slate-400 uppercase flex items-center gap-2">
-                <span>🛡️ Escalação Titular (Em Campo)</span>
+                <span>Escalação Titular (Em Campo)</span>
               </h3>
             </div>
             <span class="text-xs font-mono font-bold bg-slate-900 px-3 py-1 rounded border border-slate-800 text-amber-400" id="team-power-display">
@@ -127,8 +144,10 @@
             <!-- Gerado via JavaScript -->
           </div>
         </div>
+      </div>
 
-        <!-- SEÇÃO 3: CENTRAL DE OLHEIROS (GACHA DE ATLETAS) -->
+      <!-- TELA 3: GACHA -->
+      <div id="gacha-screen" class="hidden flex flex-col gap-6">
         <div class="cs-panel rounded-[1.25rem] p-6 relative overflow-hidden">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
             <div>
@@ -137,9 +156,6 @@
               </h3>
               <p class="text-xs text-slate-400 mt-0.5">Invista o saldo em prospecção de mercado para contratar atletas com Overall (OVR) superior.</p>
             </div>
-            <span class="text-xs font-mono text-emerald-400 font-bold bg-slate-950 px-3 py-1.5 rounded border border-slate-800">
-              RNG Autoritativo no MySQL
-            </span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono">
@@ -149,10 +165,34 @@
                   <span>Peneira Local</span>
                   <span class="text-amber-500 font-bold">$ 250</span>
                 </div>
-                <div class="text-[11px] text-slate-500 mt-2 space-y-1 font-sans">
-                  <div>• 85% chance de Tier 4 (Amador)</div>
-                  <div>• 14% chance de Tier 3 (Challenger)</div>
-                  <div class="text-slate-400 font-semibold">• 1% chance de Tier 2 (Pro League)</div>
+                <div class="text-[11px] text-slate-500 mt-2 space-y-2 font-sans">
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-slate-300">
+                      <span>• 85% chance de Tier 4 (Amador)</span>
+                      <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: Gaderna, Biace, Maciesk</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-slate-300">
+                      <span>• 14% chance de Tier 3 (Challenger)</span>
+                      <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: karrigan, JKS, broky</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-slate-400 font-semibold">
+                      <span>• 1% chance de Tier 2 (Pro League)</span>
+                      <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: KSCERATO, NiKo, ropz</div>
+                    </div>
+                  </details>
                 </div>
               </div>
               <button onclick="window.game.buyScout('local')" class="mt-4 w-full py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 group-hover:border-slate-500 rounded font-bold text-xs transition uppercase cursor-pointer">
@@ -167,10 +207,34 @@
                   <span>Internacional</span>
                   <span class="text-blue-400 font-bold">$ 2.500</span>
                 </div>
-                <div class="text-[11px] text-slate-400 mt-2 space-y-1 font-sans">
-                  <div>• 75% chance de Tier 3 (Challenger)</div>
-                  <div>• 23% chance de Tier 2 (Pro League)</div>
-                  <div class="text-amber-400 font-bold">• 2% chance de Tier 1 (Lenda Global)</div>
+                <div class="text-[11px] text-slate-400 mt-2 space-y-2 font-sans">
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-slate-300">
+                      <span>• 75% chance de Tier 3 (Challenger)</span>
+                      <span class="rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: m0NESY, sh1ro, Xantares</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-slate-300">
+                      <span>• 23% chance de Tier 2 (Pro League)</span>
+                      <span class="rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: ZywOo, twistzz, device</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-amber-400 font-bold">
+                      <span>• 2% chance de Tier 1 (Lenda Global)</span>
+                      <span class="rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: s1mple, FalleN, dev1ce</div>
+                    </div>
+                  </details>
                 </div>
               </div>
               <button onclick="window.game.buyScout('international')" class="mt-4 w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 group-hover:border-blue-400 rounded font-bold text-xs transition uppercase cursor-pointer">
@@ -185,10 +249,26 @@
                   <span>Contrato de Major</span>
                   <span class="text-amber-400 font-bold">$ 15.000</span>
                 </div>
-                <div class="text-[11px] text-slate-300 mt-2 space-y-1 font-sans">
-                  <div>• 85% chance de Tier 2 (Pro League)</div>
-                  <div class="text-amber-400 font-bold animate-pulse">• 15% chance de Tier 1 (Lenda)</div>
-                  <div class="text-[10px] text-slate-500 mt-1 italic">Alta chance de dropar FalleN ou s1mple!</div>
+                <div class="text-[11px] text-slate-300 mt-2 space-y-2 font-sans">
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-slate-300">
+                      <span>• 85% chance de Tier 2 (Pro League)</span>
+                      <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: NiKo, ropz, device</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-amber-400 font-bold animate-pulse">
+                      <span>• 15% chance de Tier 1 (Lenda)</span>
+                      <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: FalleN, s1mple, dev1ce</div>
+                    </div>
+                  </details>
+                  <div class="text-[10px] text-slate-500 italic">Alta chance de dropar FalleN ou s1mple!</div>
                 </div>
               </div>
               <button onclick="window.game.buyScout('major')" class="mt-4 w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black border border-amber-400 rounded font-black text-xs transition uppercase cursor-pointer shadow">
@@ -198,12 +278,11 @@
           </div>
         </div>
 
-        <!-- SEÇÃO 4: ABERTURA DE CAIXAS DE ARMAS (SKINS GACHA) -->
         <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
             <div>
               <h3 class="text-sm font-bold tracking-wider text-white uppercase flex items-center gap-2">
-                <span>📦 Suprimentos & Abertura de Caixas de Armas</span>
+                <span>Suprimentos & Abertura de Caixas de Armas</span>
               </h3>
               <p class="text-xs text-slate-400 mt-0.5">Abra caixas para dropar Skins de armas com Float de desgaste e StatTrak™. Elas multiplicam o OVR dos atletas!</p>
             </div>
@@ -213,18 +292,43 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono">
-            
-            <!-- 1. Caixa Mil-Spec Básica -->
             <div class="bg-slate-950 border border-blue-500/30 hover:border-blue-500 p-4 rounded-xl flex flex-col justify-between transition group relative">
               <div>
                 <div class="text-xs font-bold text-blue-400 uppercase flex justify-between">
                   <span>Caixa Mil-Spec Básica</span>
                   <span class="text-amber-500 font-bold">$ 500</span>
                 </div>
-                <div class="text-[11px] text-slate-400 mt-2 space-y-1 font-sans">
-                  <div class="text-blue-400 font-semibold">• 79% Azul (Mil-Spec)</div>
-                  <div class="text-purple-400 font-semibold">• 17% Roxo (Restricted)</div>
-                  <div class="text-pink-400 font-semibold">• 3% Rosa | 1% Vermelho</div>
+                <div class="text-[11px] text-slate-400 mt-2 space-y-2 font-sans">
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-blue-400 font-semibold">
+                      <span>• 79% Azul (Mil-Spec)</span>
+                      <span class="rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: Glock-18 • Candy Apple</div>
+                      <div>• USP-S • Torque</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-purple-400 font-semibold">
+                      <span>• 17% Roxo (Restricted)</span>
+                      <span class="rounded-full border border-purple-500/30 bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-bold text-purple-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: AK-47 • Elite Build</div>
+                      <div>• M4A1-S • Basilisk</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-pink-400 font-semibold">
+                      <span>• 3% Rosa | 1% Vermelho</span>
+                      <span class="rounded-full border border-pink-500/30 bg-pink-500/10 px-1.5 py-0.5 text-[10px] font-bold text-pink-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: AWP • Redline</div>
+                      <div>• Desert Eagle • Kumicho Dragon</div>
+                    </div>
+                  </details>
                 </div>
               </div>
               <button onclick="window.game.buyCase('basic')" class="mt-4 w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 rounded font-bold text-xs transition uppercase cursor-pointer">
@@ -232,7 +336,6 @@
               </button>
             </div>
 
-            <!-- 2. Caixa Operação Elite -->
             <div class="bg-slate-950 border border-purple-500/30 hover:border-purple-500 p-4 rounded-xl flex flex-col justify-between transition group relative overflow-hidden">
               <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
               <div>
@@ -240,10 +343,37 @@
                   <span>Caixa Operação Elite</span>
                   <span class="text-purple-400 font-bold">$ 3.500</span>
                 </div>
-                <div class="text-[11px] text-slate-400 mt-2 space-y-1 font-sans">
-                  <div class="text-purple-400 font-semibold">• 50% Roxo (Restricted)</div>
-                  <div class="text-pink-400 font-semibold">• 19% Rosa (Classified)</div>
-                  <div class="text-red-400 font-bold">• 5% Vermelho (Covert)</div>
+                <div class="text-[11px] text-slate-400 mt-2 space-y-2 font-sans">
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-purple-400 font-semibold">
+                      <span>• 50% Roxo (Restricted)</span>
+                      <span class="rounded-full border border-purple-500/30 bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-bold text-purple-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: AK-47 • Neon Rider</div>
+                      <div>• M4A4 • Temukau</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-pink-400 font-semibold">
+                      <span>• 19% Rosa (Classified)</span>
+                      <span class="rounded-full border border-pink-500/30 bg-pink-500/10 px-1.5 py-0.5 text-[10px] font-bold text-pink-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: AWP • Medusa</div>
+                      <div>• USP-S • Kill Confirmed</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-red-400 font-bold">
+                      <span>• 5% Vermelho (Covert)</span>
+                      <span class="rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[10px] font-bold text-red-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: Desert Eagle • Printstream</div>
+                      <div>• AK-47 • Asiimov</div>
+                    </div>
+                  </details>
                 </div>
               </div>
               <button onclick="window.game.buyCase('operation')" class="mt-4 w-full py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 rounded font-bold text-xs transition uppercase cursor-pointer">
@@ -251,7 +381,6 @@
               </button>
             </div>
 
-            <!-- 3. Caixa Contrabando & Facas -->
             <div class="bg-gradient-to-b from-slate-950 to-slate-900 border border-red-500/40 hover:border-red-500 p-4 rounded-xl flex flex-col justify-between transition group relative overflow-hidden shadow-lg shadow-red-500/5">
               <div class="absolute -top-10 -right-10 w-32 h-32 bg-red-500/10 rounded-full blur-2xl pointer-events-none"></div>
               <div>
@@ -259,20 +388,36 @@
                   <span>Contrabando & Facas</span>
                   <span class="text-amber-400 font-bold">$ 25.000</span>
                 </div>
-                <div class="text-[11px] text-slate-300 mt-2 space-y-1 font-sans">
-                  <div class="text-pink-400 font-semibold">• 60% Rosa | 20% Vermelho</div>
-                  <div class="text-amber-400 font-bold animate-pulse">• 5% Dourado (Faca / D-Lore!)</div>
-                  <div class="text-[10px] text-slate-500 mt-1 italic">+300% a +500% Bônus de OVR!</div>
+                <div class="text-[11px] text-slate-300 mt-2 space-y-2 font-sans">
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-pink-400 font-semibold">
+                      <span>• 60% Rosa | 20% Vermelho</span>
+                      <span class="rounded-full border border-pink-500/30 bg-pink-500/10 px-1.5 py-0.5 text-[10px] font-bold text-pink-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: M4A4 • Howl</div>
+                      <div>• AK-47 • Case Hardened</div>
+                    </div>
+                  </details>
+                  <details class="rounded-lg border border-slate-800 bg-slate-950/70 p-2">
+                    <summary class="flex cursor-pointer items-center justify-between gap-2 text-amber-400 font-bold animate-pulse">
+                      <span>• 5% Dourado (Faca / D-Lore!)</span>
+                      <span class="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">!</span>
+                    </summary>
+                    <div class="mt-2 space-y-1 border-t border-slate-800 pt-2 text-[10px] text-slate-400">
+                      <div>• Possíveis: AWP • Dragon Lore</div>
+                      <div>• Faca Borboleta • Fade</div>
+                    </div>
+                  </details>
+                  <div class="text-[10px] text-slate-500 italic">+300% a +500% Bônus de OVR!</div>
                 </div>
               </div>
               <button onclick="window.game.buyCase('covert')" class="mt-4 w-full py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white border border-red-400 rounded font-black text-xs transition uppercase cursor-pointer shadow">
                 Abrir Contrabando ($ 25k)
               </button>
             </div>
-
           </div>
         </div>
-
       </div>
 
       <!-- TELA 2: SIMULADOR DE PARTIDA CS2 -->
@@ -398,17 +543,17 @@
           <input type="hidden" id="modal-player-index">
 
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-            <label class="block font-bold text-amber-400 mb-1.5 uppercase tracking-wider">🔫 Pistol Round ($800):</label>
+            <label class="block font-bold text-amber-400 mb-1.5 uppercase tracking-wider">Pistol Round ($800):</label>
             <select id="select-pistol" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-amber-500 focus:outline-none transition cursor-pointer"></select>
           </div>
 
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-            <label class="block font-bold text-blue-400 mb-1.5 uppercase tracking-wider">💵 Eco / Force Buy ($1.500+):</label>
+            <label class="block font-bold text-blue-400 mb-1.5 uppercase tracking-wider">Eco / Force Buy ($1.500+):</label>
             <select id="select-eco" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-blue-500 focus:outline-none transition cursor-pointer"></select>
           </div>
 
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-            <label class="block font-bold text-emerald-400 mb-1.5 uppercase tracking-wider">💎 Full Buy / Armado ($3.500+):</label>
+            <label class="block font-bold text-emerald-400 mb-1.5 uppercase tracking-wider">Full Buy / Armado ($3.500+):</label>
             <select id="select-full" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:border-emerald-500 focus:outline-none transition cursor-pointer"></select>
           </div>
 
@@ -509,6 +654,12 @@
         const serverBench = @json($bench);
         const serverInventory = @json($inventory);
 
+        this.weaponCatalog = {
+          pistols: ['Glock-18', 'USP-S', 'P2000', 'Desert Eagle', 'Five-SeveN', 'Tec-9', 'Dual Berettas', 'CZ75-Auto'],
+          eco: ['MAC-10', 'MP7', 'MP5-SD', 'PP-Bizon', 'Nova', 'Sawed-Off', 'Galil AR', 'FAMAS', 'M4A1-S', 'AK-47'],
+          rifles: ['AK-47', 'M4A4', 'M4A1-S', 'AUG', 'FAMAS', 'Galil AR', 'AWP', 'SSG 08', 'G3SG1', 'SCAR-20']
+        };
+
         this.state = {
           teamName: serverTeam.team_name,
           money: parseFloat(serverTeam.money),
@@ -521,7 +672,8 @@
           // Garante que se o serverRoster vier vazio, o array não quebra
           team: serverRoster ? serverRoster.map(item => this.mapPlayerData(item)) : [],
           bench: serverBench ? serverBench.map(item => this.mapPlayerData(item)) : [],
-          enemyTeam: []
+          enemyTeam: [],
+          enemyName: ''
         };
 
         this.init();
@@ -547,6 +699,7 @@
         this.renderBench();
         this.updateUI();
         this.populateModalSelects();
+        this.openLobbyTab();
       }
 
       populateModalSelects() {
@@ -815,8 +968,10 @@
             this.state.money = parseFloat(data.new_money);
             this.updateUI();
             this.showGachaReveal(data.pulled_player);
-            
-            setTimeout(() => location.reload(), 1500); 
+
+            setTimeout(() => {
+              window.location.assign('/game');
+            }, 1500);
           } else {
             alert(data.error || "Erro ao processar contratação.");
           }
@@ -884,15 +1039,15 @@
               <!-- Setups Táticos -->
               <div class="mt-3 space-y-1.5 font-mono text-[10px]">
                 <div class="p-1.5 rounded bg-slate-950/80 border border-slate-800 flex justify-between items-center">
-                  <span class="text-amber-400 font-bold">🔫 Pistol:</span>
+                  <span class="text-amber-400 font-bold">Pistol:</span>
                   <span class="text-slate-300 truncate max-w-[90px]">${player.setups.pistol.weapon}</span>
                 </div>
                 <div class="p-1.5 rounded bg-slate-950/80 border border-slate-800 flex justify-between items-center">
-                  <span class="text-blue-400 font-bold">💵 Eco:</span>
+                  <span class="text-blue-400 font-bold">Eco:</span>
                   <span class="text-slate-300 truncate max-w-[90px]">${player.setups.eco.weapon}</span>
                 </div>
                 <div class="p-1.5 rounded bg-slate-950/80 border border-slate-800 flex justify-between items-center">
-                  <span class="text-emerald-400 font-bold">💎 Full Buy:</span>
+                  <span class="text-emerald-400 font-bold">Full Buy:</span>
                   <span class="text-slate-300 font-bold truncate max-w-[90px]">${player.setups.full.weapon}</span>
                 </div>
               </div>
@@ -900,10 +1055,10 @@
 
             <div class="mt-3 grid grid-cols-2 gap-1.5">
               <button onclick="window.game.openTacticalModal(${idx})" class="py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 hover:border-amber-500 rounded font-bold text-[10px] transition flex justify-center items-center gap-1 cursor-pointer shadow">
-                <span>⚙️ SETUP</span>
+                <span>SETUP</span>
               </button>
               <button onclick="window.game.openSwapModal(${idx})" class="py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 hover:border-amber-400 rounded font-black text-[10px] transition flex justify-center items-center gap-1 cursor-pointer shadow uppercase tracking-wider">
-                <span>🔄 SUB</span>
+                <span>SUB</span>
               </button>
             </div>
           `;
@@ -931,6 +1086,7 @@
       }
 
       async startMatchmaking() {
+        document.getElementById('matchmaking-status').textContent = 'Buscando adversário registrado...';
         document.getElementById('lobby-screen').classList.add('hidden');
         document.getElementById('match-screen').classList.remove('hidden');
         document.getElementById('btn-return-lobby').classList.add('hidden');
@@ -940,21 +1096,29 @@
 
         let enemyPower;
         let enemyName = 'Time Rival';
+        let opponentMessage = 'Usando bot como adversário padrão.';
 
         if (opponentData.success) {
           this.state.enemyTeam = opponentData.roster.map(item => this.mapPlayerData(item));
           enemyPower = this.state.enemyTeam.reduce((sum, p) => sum + p.baseOvr, 0);
           enemyName = opponentData.team_name;
+          this.state.enemyName = opponentData.team_name;
+          opponentMessage = `Oponente registrado encontrado: ${enemyName}.`;
         } else {
           const variance = (Math.random() * 0.20) - 0.10;
           enemyPower = Math.floor(myPower * (1 + variance));
+          this.state.enemyTeam = [];
+          this.state.enemyName = 'Bot Oficial';
+          opponentMessage = 'Nenhum outro jogador encontrado no momento. Usando bot como adversário.';
         }
 
         document.getElementById('match-my-name').textContent = this.state.teamName;
         document.getElementById('enemy-team-name').textContent = enemyName;
         document.getElementById('score-my').textContent = '0';
         document.getElementById('score-enemy').textContent = '0';
-        
+        document.getElementById('matchmaking-status').textContent = opponentMessage;
+        this.renderOpponentPreview();
+
         const log = document.getElementById('match-log');
         log.innerHTML = `<div class="text-amber-400 font-bold">⚡ Servidor alocado! ${this.state.teamName} vs ${enemyName}. Formato MR12 com Economia Dinâmica.</div>`;
 
@@ -1081,9 +1245,61 @@
         btn.classList.remove('hidden');
       }
 
+      renderOpponentPreview() {
+        const preview = document.getElementById('opponent-preview');
+        const previewName = document.getElementById('opponent-preview-name');
+        const previewTier = document.getElementById('opponent-preview-tier');
+        const previewList = document.getElementById('opponent-preview-list');
+
+        if (!this.state.enemyTeam.length) {
+          preview.classList.add('hidden');
+          return;
+        }
+
+        preview.classList.remove('hidden');
+        previewName.textContent = this.state.enemyName || 'Adversário Registrado';
+        previewTier.textContent = this.state.enemyTeam.length > 0 ? 'Registrado' : 'Bot';
+        previewList.innerHTML = '';
+
+        this.state.enemyTeam.slice(0, 5).forEach((player) => {
+          const card = document.createElement('div');
+          card.className = 'rounded-2xl border border-slate-800 bg-slate-900 p-3';
+          card.innerHTML = `
+            <div class="text-[10px] uppercase tracking-[0.2em] text-slate-500">${player.role}</div>
+            <div class="mt-2 text-sm font-black text-white">${player.name}</div>
+            <div class="mt-1 text-[11px] text-slate-400">${player.tier} • ${player.baseOvr} OVR</div>
+          `;
+          previewList.appendChild(card);
+        });
+      }
+
+      openLobbyTab() {
+        document.getElementById('lobby-screen').classList.remove('hidden');
+        document.getElementById('gacha-screen').classList.add('hidden');
+        document.getElementById('match-screen').classList.add('hidden');
+        document.getElementById('tab-lobby').classList.replace('bg-slate-900/70', 'bg-slate-800');
+        document.getElementById('tab-lobby').classList.replace('text-slate-300', 'text-slate-100');
+        document.getElementById('tab-gacha').classList.replace('bg-slate-800', 'bg-slate-900/70');
+        document.getElementById('tab-gacha').classList.replace('text-slate-100', 'text-slate-300');
+      }
+
+      openGachaTab() {
+        document.getElementById('lobby-screen').classList.add('hidden');
+        document.getElementById('gacha-screen').classList.remove('hidden');
+        document.getElementById('match-screen').classList.add('hidden');
+        document.getElementById('tab-gacha').classList.replace('bg-slate-900/70', 'bg-slate-800');
+        document.getElementById('tab-gacha').classList.replace('text-slate-300', 'text-slate-100');
+        document.getElementById('tab-lobby').classList.replace('bg-slate-800', 'bg-slate-900/70');
+        document.getElementById('tab-lobby').classList.replace('text-slate-100', 'text-slate-300');
+      }
+
       returnToLobby() {
         document.getElementById('match-screen').classList.add('hidden');
+        document.getElementById('gacha-screen').classList.add('hidden');
         document.getElementById('lobby-screen').classList.remove('hidden');
+        document.getElementById('opponent-preview').classList.add('hidden');
+        document.getElementById('matchmaking-status').textContent = 'Pronto para encontrar outra equipe registrada no servidores.';
+        this.openLobbyTab();
         this.renderTeam();
       }
 
