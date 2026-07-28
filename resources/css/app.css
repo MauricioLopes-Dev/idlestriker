@@ -9,3 +9,122 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+:root {
+    color-scheme: dark;
+    --cs-bg: #03060d;
+    --cs-panel: rgba(8, 13, 24, 0.95);
+    --cs-panel-2: rgba(11, 17, 31, 0.96);
+    --cs-border: rgba(255, 255, 255, 0.08);
+    --cs-accent: #ff6a00;
+    --cs-accent-2: #ff3d2e;
+    --cs-soft: #94a3b8;
+}
+
+body {
+    background:
+        radial-gradient(circle at top left, rgba(255, 106, 0, 0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(255, 61, 46, 0.16), transparent 30%),
+        linear-gradient(135deg, #02040a 0%, #050811 45%, #03040a 100%);
+    min-height: 100vh;
+}
+
+.cs-shell {
+    position: relative;
+    overflow-x: hidden;
+}
+
+.cs-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+    opacity: 0.4;
+}
+
+.cs-panel {
+    border: 1px solid var(--cs-border);
+    background: linear-gradient(135deg, rgba(10, 16, 28, 0.95), rgba(7, 11, 20, 0.96));
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+}
+
+.cs-panel-strong {
+    border: 1px solid rgba(255, 106, 0, 0.22);
+    box-shadow:
+        0 0 0 1px rgba(255, 106, 0, 0.08),
+        0 24px 70px rgba(0, 0, 0, 0.4);
+}
+
+.cs-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 106, 0, 0.24);
+    background: rgba(255, 106, 0, 0.1);
+    color: #ffd0a8;
+    padding: 0.45rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.cs-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    padding: 0.9rem 1.25rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 10px 24px rgba(255, 106, 0, 0.18);
+}
+
+.cs-button:hover {
+    transform: translateY(-1px);
+}
+
+.cs-input {
+    width: 100%;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(2, 6, 23, 0.85);
+    color: #f8fafc;
+    padding: 0.8rem 0.95rem;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.cs-input:focus {
+    border-color: rgba(255, 106, 0, 0.75);
+    box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.18);
+    outline: none;
+}
+
+.cs-glow::after {
+    content: '';
+    position: absolute;
+    inset: -20% 60% auto auto;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(255, 106, 0, 0.16), transparent 70%);
+    pointer-events: none;
+}
+
+.cs-kicker {
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    font-size: 0.72rem;
+    font-weight: 700;
+}

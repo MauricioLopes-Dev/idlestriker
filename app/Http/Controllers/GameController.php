@@ -8,44 +8,46 @@ use App\Models\PlayerCatalog;
 use App\Models\UserPlayer;
 use App\Models\UserSkin;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class GameController extends Controller
 {
-   public function index()
+    public function index()
     {
-        // Pega sempre o primeiro usuário da base (ou cria se não existir)
-        $user = User::first();
-        if (!$user) {
-            $user = User::create([
-                'name' => 'Operador Convidado',
-                'email' => 'teste@idlestrike.com',
-                'password' => bcrypt('secret123')
-            ]);
-        }
+        $user = $this->resolveUser();
 
-        $team = Team::firstOrCreate(
+        $team = $user->team()->firstOrCreate(
             ['user_id' => $user->id],
             ['team_name' => 'Gaderna Gaming', 'money' => 100.00, 'elo' => 1000]
         );
 
-        // Se não houver nenhum titular para este usuário, injeta os recrutas imediatamente
-        if (UserPlayer::where('user_id', $user->id)->whereNotNull('slot_index')->count() === 0) {
+        // 3. SEED AUTOMÁTICO DE SEGURANÇA: Se o catálogo estiver vazio, popula
+        if (PlayerCatalog::count() === 0) {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'PlayerCatalogSeeder']);
+        }
+
+        // 4. GARANTIA DE ESCALAÇÃO: Se o usuário não tiver nenhum titular, limpa lixo e injeta os 5 recrutas padrão
+        $activeStartersCount = UserPlayer::where('user_id', $user->id)->whereNotNull('slot_index')->count();
+        if ($activeStartersCount === 0) {
             UserPlayer::where('user_id', $user->id)->delete();
             $this->seedInitialTeam($user->id);
         }
 
+        // 5. Busca os 5 Titulares com o relacionamento garantido
         $roster = UserPlayer::with('catalog')
             ->where('user_id', $user->id)
             ->whereNotNull('slot_index')
             ->orderBy('slot_index')
             ->get();
 
+        // 6. Busca o Banco de Reservas
         $bench = UserPlayer::with('catalog')
             ->where('user_id', $user->id)
             ->whereNull('slot_index')
             ->get();
 
+        // 7. Busca o Inventário de Skins
         $inventory = UserSkin::where('user_id', $user->id)->orderByDesc('id')->get();
 
         return view('game.index', [
@@ -57,39 +59,16 @@ class GameController extends Controller
         ]);
     }
 
-    /**
-     * Substitui um jogador titular por um reserva no MySQL.
-     */
-    public function swapPlayer(Request $request)
+    private function resolveUser(): User
     {
-        $validated = $request->validate([
-            'starter_id' => 'required|integer|exists:user_players,id',
-            'bench_id' => 'required|integer|exists:user_players,id',
-        ]);
+        $authenticatedUser = Auth::user();
+        if ($authenticatedUser instanceof User) {
+            session()->put('guest_user_id', $authenticatedUser->id);
 
-        $user = User::firstOrCreate(['email' => 'teste@idlestrike.com']);
+            return $authenticatedUser;
+        }
 
-        $starter = UserPlayer::where('id', $validated['starter_id'])->where('user_id', $user->id)->firstOrFail();
-        $bench = UserPlayer::where('id', $validated['bench_id'])->where('user_id', $user->id)->firstOrFail();
-
-        $currentSlot = $starter->slot_index;
-
-        DB::transaction(function () use ($starter, $bench, $currentSlot) {
-            $starter->slot_index = null;
-            $starter->save();
-
-            $bench->slot_index = $currentSlot;
-            $bench->save();
-        });
-
-        $updatedRoster = UserPlayer::with('catalog')->where('user_id', $user->id)->whereNotNull('slot_index')->orderBy('slot_index')->get();
-        $updatedBench = UserPlayer::with('catalog')->where('user_id', $user->id)->whereNull('slot_index')->get();
-
-        return response()->json([
-            'success' => true,
-            'roster' => $updatedRoster,
-            'bench' => $updatedBench
-        ]);
+        abort(401);
     }
 
     private function seedInitialTeam($userId): void
@@ -122,6 +101,92 @@ class GameController extends Controller
         });
     }
 
+    public function swapPlayer(Request $request)
+    {
+        $validated = $request->validate([
+            'starter_id' => 'required|integer|exists:user_players,id',
+            'bench_id' => 'required|integer|exists:user_players,id',
+        ]);
+
+        $user = $this->resolveUser();
+        $starter = UserPlayer::where('id', $validated['starter_id'])->where('user_id', $user->id)->firstOrFail();
+        $bench = UserPlayer::where('id', $validated['bench_id'])->where('user_id', $user->id)->firstOrFail();
+
+        $currentSlot = $starter->slot_index;
+
+        DB::transaction(function () use ($starter, $bench, $currentSlot) {
+            $starter->slot_index = null;
+            $starter->save();
+
+            $bench->slot_index = $currentSlot;
+            $bench->save();
+        });
+
+        $updatedRoster = UserPlayer::with('catalog')->where('user_id', $user->id)->whereNotNull('slot_index')->orderBy('slot_index')->get();
+        $updatedBench = UserPlayer::with('catalog')->where('user_id', $user->id)->whereNull('slot_index')->get();
+
+        return response()->json([
+            'success' => true,
+            'roster' => $updatedRoster,
+            'bench' => $updatedBench
+        ]);
+    }
+
+    public function findOpponent()
+    {
+        $currentUser = $this->resolveUser();
+
+        $opponentUser = User::where('id', '<>', $currentUser->id)
+            ->whereHas('team')
+            ->inRandomOrder()
+            ->first();
+
+        if ($opponentUser) {
+            $this->ensureUserHasRoster($opponentUser);
+
+            $opponentTeam = $opponentUser->team()->firstOrCreate([
+                'user_id' => $opponentUser->id,
+            ],[
+                'team_name' => 'Time Oponente',
+                'money' => 100.00,
+                'elo' => 1000,
+            ]);
+
+            $opponentRoster = UserPlayer::with('catalog')
+                ->where('user_id', $opponentUser->id)
+                ->whereNotNull('slot_index')
+                ->orderBy('slot_index')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'team_name' => $opponentTeam->team_name,
+                'roster' => $opponentRoster,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'team_name' => 'Time Bot Oficial',
+            'roster' => [
+                ['id' => 0, 'catalog' => ['role' => 'Operador', 'name' => 'Bot Recon', 'base_ovr' => 57, 'tier' => 'Tier 4 (Base)'], 'tactical_setups' => ['pistol' => ['weapon' => 'Glock-18'], 'eco' => ['weapon' => 'MP9'], 'full' => ['weapon' => 'AK-47']]],
+                ['id' => 1, 'catalog' => ['role' => 'Suporte', 'name' => 'Bot Shield', 'base_ovr' => 55, 'tier' => 'Tier 4 (Base)'], 'tactical_setups' => ['pistol' => ['weapon' => 'USP-S'], 'eco' => ['weapon' => 'MAC-10'], 'full' => ['weapon' => 'M4A4']]],
+                ['id' => 2, 'catalog' => ['role' => 'Sniper', 'name' => 'Bot Eagle', 'base_ovr' => 58, 'tier' => 'Tier 4 (Base)'], 'tactical_setups' => ['pistol' => ['weapon' => 'P2000'], 'eco' => ['weapon' => 'Nova'], 'full' => ['weapon' => 'AWP']]],
+                ['id' => 3, 'catalog' => ['role' => 'Entry', 'name' => 'Bot Rush', 'base_ovr' => 56, 'tier' => 'Tier 4 (Base)'], 'tactical_setups' => ['pistol' => ['weapon' => 'P250'], 'eco' => ['weapon' => 'UMP-45'], 'full' => ['weapon' => 'Galil AR']]],
+                ['id' => 4, 'catalog' => ['role' => 'Lurker', 'name' => 'Bot Phantom', 'base_ovr' => 54, 'tier' => 'Tier 4 (Base)'], 'tactical_setups' => ['pistol' => ['weapon' => 'CZ75-Auto'], 'eco' => ['weapon' => 'MP7'], 'full' => ['weapon' => 'FAMAS']]],
+            ],
+        ]);
+    }
+
+    private function ensureUserHasRoster(User $user): void
+    {
+        $activeStartersCount = UserPlayer::where('user_id', $user->id)->whereNotNull('slot_index')->count();
+
+        if ($activeStartersCount === 0) {
+            $this->seedInitialTeam($user->id);
+        }
+    }
+
     public function finishMatch(Request $request)
     {
         $validated = $request->validate([
@@ -129,7 +194,7 @@ class GameController extends Controller
             'enemy_score' => 'required|integer|min:0|max:15',
         ]);
 
-        $user = User::firstOrCreate(['email' => 'teste@idlestrike.com']);
+        $user = $this->resolveUser();
         $team = Team::where('user_id', $user->id)->firstOrFail();
 
         $team->matches_played += 1;
@@ -168,8 +233,7 @@ class GameController extends Controller
             'full_weapon' => 'required|string|max:50',
         ]);
 
-        $user = User::firstOrCreate(['email' => 'teste@idlestrike.com']);
-
+        $user = $this->resolveUser();
         $userPlayer = UserPlayer::where('id', $validated['user_player_id'])
             ->where('user_id', $user->id)
             ->firstOrFail();
@@ -196,7 +260,7 @@ class GameController extends Controller
             'scout_type' => 'required|string|in:local,international,major'
         ]);
 
-        $user = User::firstOrCreate(['email' => 'teste@idlestrike.com']);
+        $user = $this->resolveUser();
         $team = Team::where('user_id', $user->id)->firstOrFail();
 
         $scoutConfigs = [
@@ -272,7 +336,7 @@ class GameController extends Controller
             'case_type' => 'required|string|in:basic,operation,covert'
         ]);
 
-        $user = User::firstOrCreate(['email' => 'teste@idlestrike.com']);
+        $user = $this->resolveUser();
         $team = Team::where('user_id', $user->id)->firstOrFail();
 
         $caseConfigs = [
@@ -343,7 +407,7 @@ class GameController extends Controller
                 ['weapon' => 'Faca Borboleta', 'skin' => 'Fade ✨', 'buff' => 4.00],
                 ['weapon' => 'AK-47', 'skin' => 'Case Hardened (Blue Gem)', 'buff' => 3.80],
                 ['weapon' => 'M4A4', 'skin' => 'Howl 🔥', 'buff' => 4.20],
-                ['weapon' => 'Luvas Esportivas', 'skin' => 'Vice 🧤', 'buff`' => 3.50],
+                ['weapon' => 'Luvas Esportivas', 'skin' => 'Vice 🧤', 'buff' => 3.50],
             ]
         ];
 
@@ -363,7 +427,7 @@ class GameController extends Controller
 
         $droppedSkin = null;
         DB::transaction(function () use ($team, $selectedRarity, $selectedSkin, $floatValue, $finalBuff, $isStattrak, &$droppedSkin, $user) {
-            $team->money -= 500.00; // Será ajustado conforme o custo real se necessário
+            $team->money -= 500.00;
             $team->save();
 
             $droppedSkin = UserSkin::create([

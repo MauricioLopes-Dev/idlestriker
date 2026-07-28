@@ -8,40 +8,56 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
-<div class="bg-red-900 text-white p-4 font-mono text-xs">
-  DEBUG LARAVEL -> Total Titulares: {{ count($roster) }} | Total Reservas: {{ count($bench) }}
-</div>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-amber-500 selection:text-black cs-shell">
+
   <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-      
-      <!-- Logo e Nome do Time -->
-      <div class="flex items-center gap-4">
-        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center font-black text-black text-lg shadow-lg shadow-amber-500/20">
-          IS
+  <header class="sticky top-0 z-50 border-b border-white/10 bg-slate-900/70 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3">
+      <div class="flex items-start justify-between gap-3">
+        <!-- Logo -->
+        <div class="flex items-center gap-4">
+          <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500 to-amber-700 font-black text-lg text-black shadow-lg shadow-amber-500/20">
+            IS
+          </div>
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.35em] text-slate-500">Tactical Ops</p>
+            <p class="text-sm font-semibold text-white">Idle-Strike Ultimate Team</p>
+          </div>
         </div>
-        <div class="flex flex-col">
-          <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Organização Oficial • Laravel ORM</span>
-          <div class="flex items-center gap-2 group">
-            <input type="text" id="team-name-input" value="{{ $team->team_name }}" onchange="window.game.updateTeamName(this.value)" class="bg-transparent font-black text-lg text-white border-b border-dashed border-slate-700 focus:border-amber-500 focus:outline-none w-52 transition py-0">
-            <span class="text-xs text-slate-500 group-hover:text-amber-400 transition">✏️</span>
+
+        <div class="flex flex-col items-end gap-2">
+          <div class="flex justify-end gap-3">
+            @auth
+              <span class="rounded-full border border-white/10 bg-slate-950/80 px-3 py-2 text-sm text-slate-300">Olá, {{ Auth::user()->name }}</span>
+              <form method="POST" action="/logout">
+                @csrf
+                <button type="submit" class="rounded-full border border-white/10 bg-slate-950/80 px-3 py-2 text-sm text-slate-200 transition hover:border-amber-500 hover:text-amber-400">Sair</button>
+              </form>
+            @else
+              <a href="/login" class="rounded-full border border-white/10 bg-slate-950/80 px-3 py-2 text-sm text-slate-200 transition hover:border-amber-500 hover:text-amber-400">Entrar</a>
+              <a href="/register" class="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-300 transition hover:bg-amber-500/20">Criar conta</a>
+            @endauth
           </div>
         </div>
       </div>
 
-      <!-- Caixa de Saldo e Rating -->
-      <div class="flex items-center gap-6 bg-slate-950 px-4 py-1.5 rounded-lg border border-slate-800 font-mono text-sm">
+      <div class="flex items-center justify-between gap-6 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-2 font-mono text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div class="min-w-[240px]">
+          <span class="block text-[10px] font-sans font-bold uppercase text-slate-500">Nome do Time</span>
+          <div class="group flex items-center gap-2">
+            <input type="text" id="team-name-input" value="{{ $team->team_name }}" onchange="window.game.updateTeamName(this.value)" class="w-full border-b border-dashed border-slate-700 bg-transparent py-0 text-lg font-black text-white transition focus:border-amber-500 focus:outline-none">
+            <span class="text-xs text-slate-500 transition group-hover:text-amber-400"></span>
+          </div>
+        </div>
         <div>
-          <span class="text-[10px] text-slate-500 block uppercase font-sans font-bold">Cofre do Clube</span>
-          <span class="text-emerald-400 font-bold text-base" id="money-display">$ {{ number_format($team->money, 2, ',', '.') }}</span>
+          <span class="block text-[10px] font-sans font-bold uppercase text-slate-500">Cofre do Clube</span>
+          <span class="text-base font-bold text-emerald-400" id="money-display">$ {{ number_format($team->money, 2, ',', '.') }}</span>
         </div>
         <div class="border-l border-slate-800 pl-4">
-          <span class="text-[10px] text-slate-500 block uppercase font-sans font-bold">Rating Competitivo</span>
-          <span class="text-amber-400 font-bold" id="elo-display">{{ $team->elo }} pts</span>
+          <span class="block text-[10px] font-sans font-bold uppercase text-slate-500">Rating Competitivo</span>
+          <span class="font-bold text-amber-400" id="elo-display">{{ $team->elo }} pts</span>
         </div>
       </div>
-
     </div>
   </header>
 
@@ -55,7 +71,7 @@
       <div id="lobby-screen" class="flex flex-col gap-6">
         
         <!-- Banner de Busca de Partida -->
-        <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-xl p-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between shadow-2xl gap-6">
+        <div class="cs-panel cs-panel-strong cs-glow rounded-[1.5rem] p-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between shadow-2xl gap-6">
           <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
           <div class="z-10 text-center md:text-left">
@@ -94,7 +110,7 @@
         </div>
 
         <!-- SEÇÃO 2: BANCO DE RESERVAS -->
-        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
+        <div class="cs-panel rounded-[1.25rem] p-5">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
             <div>
               <h3 class="text-xs font-bold tracking-wider text-amber-400 uppercase flex items-center gap-2">
@@ -113,7 +129,7 @@
         </div>
 
         <!-- SEÇÃO 3: CENTRAL DE OLHEIROS (GACHA DE ATLETAS) -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 relative overflow-hidden">
+        <div class="cs-panel rounded-[1.25rem] p-6 relative overflow-hidden">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
             <div>
               <h3 class="text-sm font-bold tracking-wider text-white uppercase flex items-center gap-2">
@@ -504,7 +520,8 @@
           
           // Garante que se o serverRoster vier vazio, o array não quebra
           team: serverRoster ? serverRoster.map(item => this.mapPlayerData(item)) : [],
-          bench: serverBench ? serverBench.map(item => this.mapPlayerData(item)) : []
+          bench: serverBench ? serverBench.map(item => this.mapPlayerData(item)) : [],
+          enemyTeam: []
         };
 
         this.init();
@@ -591,9 +608,9 @@
         // Tradução de Desgaste (Float Wear)
         let wearText = "Battle-Scarred";
         if (skin.float_value <= 0.07) wearText = "Factory New 🌟";
-        elseif (skin.float_value <= 0.15) wearText = "Minimal Wear ✨";
-        elseif (skin.float_value <= 0.38) wearText = "Field-Tested";
-        elseif (skin.float_value <= 0.45) wearText = "Well-Worn";
+        else if (skin.float_value <= 0.15) wearText = "Minimal Wear ✨";
+        else if (skin.float_value <= 0.38) wearText = "Field-Tested";
+        else if (skin.float_value <= 0.45) wearText = "Well-Worn";
         document.getElementById('case-wear').textContent = wearText;
 
         // Customização da cor da borda de raridade
@@ -898,27 +915,50 @@
 
       // --- SIMULAÇÃO DE PARTIDA ---
 
-      startMatchmaking() {
+      async fetchOpponent() {
+        try {
+          const response = await fetch('/game/opponent', {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+
+          return await response.json();
+        } catch (error) {
+          console.error('Erro ao buscar oponente:', error);
+          return { success: false };
+        }
+      }
+
+      async startMatchmaking() {
         document.getElementById('lobby-screen').classList.add('hidden');
         document.getElementById('match-screen').classList.remove('hidden');
         document.getElementById('btn-return-lobby').classList.add('hidden');
 
         const myPower = this.getBaseTeamPower();
-        const variance = (Math.random() * 0.20) - 0.10; 
-        const enemyPower = Math.floor(myPower * (1 + variance));
-        
-        const rivalNames = ['Furia_Academy', 'NaVi_Recruits', 'Cloud9_Idle', 'Astralis_Base', 'Loud_Async'];
-        const randomRival = rivalNames[Math.floor(Math.random() * rivalNames.length)];
+        const opponentData = await this.fetchOpponent();
+
+        let enemyPower;
+        let enemyName = 'Time Rival';
+
+        if (opponentData.success) {
+          this.state.enemyTeam = opponentData.roster.map(item => this.mapPlayerData(item));
+          enemyPower = this.state.enemyTeam.reduce((sum, p) => sum + p.baseOvr, 0);
+          enemyName = opponentData.team_name;
+        } else {
+          const variance = (Math.random() * 0.20) - 0.10;
+          enemyPower = Math.floor(myPower * (1 + variance));
+        }
 
         document.getElementById('match-my-name').textContent = this.state.teamName;
-        document.getElementById('enemy-team-name').textContent = randomRival;
+        document.getElementById('enemy-team-name').textContent = enemyName;
         document.getElementById('score-my').textContent = '0';
         document.getElementById('score-enemy').textContent = '0';
         
         const log = document.getElementById('match-log');
-        log.innerHTML = `<div class="text-amber-400 font-bold">⚡ Servidor alocado! ${this.state.teamName} vs ${randomRival}. Formato MR12 com Economia Dinâmica.</div>`;
+        log.innerHTML = `<div class="text-amber-400 font-bold">⚡ Servidor alocado! ${this.state.teamName} vs ${enemyName}. Formato MR12 com Economia Dinâmica.</div>`;
 
-        this.runMatchSimulation(myPower, enemyPower, randomRival);
+        this.runMatchSimulation(myPower, enemyPower, enemyName);
       }
 
       runMatchSimulation(myBasePower, enemyBasePower, rivalName) {
@@ -975,14 +1015,19 @@
             enemyMatchMoney += 1900;
             document.getElementById('score-my').textContent = myScore;
             
-            const weaponUsed = this.state.team[Math.floor(Math.random()*5)].setups[mySetupType].weapon;
+            const weaponUsed = this.state.team[Math.floor(Math.random() * this.state.team.length)].setups[mySetupType]?.weapon || 'AK-47';
             log.innerHTML += `<div class="text-blue-400">► Round ${currentRound} [${mySetupType.toUpperCase()}]: Excelente eliminação de ${weaponUsed}! ${this.state.teamName} venceu (+ $3.250).</div>`;
           } else {
             enemyScore++;
             enemyMatchMoney += 3250;
             myMatchMoney += 1900;
             document.getElementById('score-enemy').textContent = enemyScore;
-            log.innerHTML += `<div class="text-amber-500">► Round ${currentRound}: ${rivalName} [${enemySetupType}] dominou o bomb e levou o round. (+ $1.900 consolatórios).</div>`;
+
+            const enemyWeapon = (this.state.enemyTeam.length > 0)
+              ? this.state.enemyTeam[Math.floor(Math.random() * this.state.enemyTeam.length)].setups[mySetupType]?.weapon
+              : 'AK-47';
+
+            log.innerHTML += `<div class="text-amber-500">► Round ${currentRound}: ${rivalName} [${enemySetupType}] dominou o bomb com ${enemyWeapon} e levou o round. (+ $1.900 consolatórios).</div>`;
           }
 
           log.scrollTop = log.scrollHeight;

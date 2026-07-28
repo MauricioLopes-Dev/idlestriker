@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -12,6 +13,22 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::created(function (self $user): void {
+            $user->team()->create([
+                'team_name' => 'Gaderna Gaming',
+                'money' => 100.00,
+                'elo' => 1000,
+            ]);
+        });
+    }
+
+    public function team(): HasOne
+    {
+        return $this->hasOne(Team::class);
+    }
 
     /**
      * The attributes that are mass assignable.
